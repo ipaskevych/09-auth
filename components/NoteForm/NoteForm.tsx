@@ -2,9 +2,9 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { createNote } from '@/lib/api';
+import { createNote } from '@/lib/api/clientApi';
 import { useNoteStore } from '@/lib/store/noteStore';
-import { NewNote } from '@/types/note';
+import { NewNote, Note } from '@/types/note';
 import css from './NoteForm.module.css';
 
 export default function NoteForm() {
@@ -36,11 +36,14 @@ export default function NoteForm() {
 
   // Обработчик отправки формы
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    
-    // Передаем весь объект draft, приведенный к типу NewNote
-    mutation.mutate(draft as NewNote);
-  };
+  e.preventDefault();
+
+  mutation.mutate({
+    ...draft,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  } as Omit<Note, 'id'>);
+};
 
   // По ТЗ кнопка отмены должна возвращать пользователя назад, не очищая черновик
   const handleCancel = () => {
