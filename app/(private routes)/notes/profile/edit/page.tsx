@@ -2,8 +2,8 @@
 
 import { FormEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '../../../../lib/store/authStore';
-import { updateMe } from '../../../../lib/api/clientApi';
+import { useAuthStore } from '@/lib/store/authStore';
+import { updateMe } from '@/lib/api/clientApi';
 import css from './EditProfilePage.module.css';
 
 export default function EditProfilePage() {
