@@ -28,16 +28,21 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   } catch (error) {
+    // Вызываем логирование для всех типов ошибок
+    logErrorResponse(error);
+
     if (isAxiosError(error)) {
-      logErrorResponse(error);
-      
       const status = error.response?.status || 500;
-      const errorData = error.response?.data || { error: error.message };
+      // Возвращаем полный эталонный объект ошибки (не упрощенный)
+      const errorData = {
+        message: error.message,
+        response: error.response?.data,
+        ...(error.response?.data || {})
+      };
 
       return NextResponse.json(errorData, { status });
     }
 
-    logErrorResponse(error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal Server Error', message: (error as Error).message }, { status: 500 });
   }
 }
