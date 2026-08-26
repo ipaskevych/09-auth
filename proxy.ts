@@ -21,12 +21,21 @@ export async function proxy(request: NextRequest) {
       const sessionRes = await checkSession();
       
       if (sessionRes.status === 200) {
-        // Если проверка успешна, бэкенд через getAuthHeaders/axios обновил куки в текущем контексте.
-        // Чтобы middleware пропустил запрос дальше, симулируем наличие accessToken
         accessToken = 'valid';
+
+        // Сохраняем новые куки из ответа бэкенда в браузер пользователя
+        const setCookieHeader = sessionRes.headers['set-cookie'];
+        if (setCookieHeader) {
+          setCookieHeader.forEach((cookieString) => {
+            const [cookieNameValue, ...parts] = cookieString.split(';');
+            const [name, value] = cookieNameValue.split('=');
+            if (name && value) {
+              response.cookies.set(name.trim(), value.trim());
+            }
+          });
+        }
       }
     } catch (error) {
-      // Если checkSession упал с ошибкой — значит refreshToken невалиден
       accessToken = undefined;
     }
   }

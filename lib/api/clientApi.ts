@@ -4,12 +4,13 @@ import { AuthResponse } from '@/types/auth';
 import { Note, NotesFilters } from '@/types/note';
 
 // === Заметки (Notes) ===
-export const fetchNotes = async (filters?: NotesFilters): Promise<Note[]> => {
-  return (await api.get<Note[]>('/notes', { params: filters })).data;
-};
 
 export const fetchNoteById = async (id: string): Promise<Note> => {
   return (await api.get<Note>(`/notes/${id}`)).data;
+};
+
+export const fetchNotes = async (filters?: NotesFilters): Promise<Note[]> => {
+  return (await api.get<Note[]>('/notes', { params: filters })).data;
 };
 
 export const createNote = async (noteData: Omit<Note, 'id'>): Promise<Note> => {

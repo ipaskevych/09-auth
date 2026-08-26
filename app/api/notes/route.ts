@@ -27,18 +27,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(res.data, { status: res.status });
    } catch (error) {
     if (isAxiosError(error)) {
-      logErrorResponse(error);
-      
-      const status = error.response?.status || 500;
-      const errorData = error.response?.data || { error: error.message };
-
-      return NextResponse.json(errorData, { status });
+      logErrorResponse(error.response?.data);
+      return NextResponse.json(
+        error.response?.data, 
+        { status: error.response?.status || 500 }
+      );
     }
-
-    logErrorResponse(error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
-}
+    
+  }
+
 
 export async function POST(request: NextRequest) {
   try {
