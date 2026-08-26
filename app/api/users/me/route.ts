@@ -18,11 +18,9 @@ export async function GET() {
     return NextResponse.json(res.data, { status: res.status });
   } catch (error) {
     if (isAxiosError(error)) {
-      logErrorResponse(error.response?.data);
-      return NextResponse.json(
-        error.response?.data,
-        { status: error.response?.status || 500 }
-      );
+      const errorData = error.response?.data || { message: error.message };
+      logErrorResponse(errorData);
+      return NextResponse.json(errorData, { status: error.response?.status || 500 });
     }
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
@@ -39,18 +37,12 @@ export async function PATCH(request: Request) {
       },
     });
     return NextResponse.json(res.data, { status: res.status });
-
   } catch (error) {
     if (isAxiosError(error)) {
-      logErrorResponse(error);
-    
-      const status = error.response?.status || 500;
-      const errorData = error.response?.data || { error: error.message };
-
-      return NextResponse.json(errorData, { status });
+      const errorData = error.response?.data || { message: error.message };
+      logErrorResponse(errorData);
+      return NextResponse.json(errorData, { status: error.response?.status || 500 });
     }
-
-    logErrorResponse(error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
