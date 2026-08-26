@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { api } from '../../../../lib/api/api';
+import { noteApi } from '../../../../lib/api/api';
 import { cookies } from 'next/headers';
 import { parseSetCookie } from 'cookie';
 import { isAxiosError } from 'axios';
@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const apiRes = await api.post('auth/register', body);
+    const apiRes = await noteApi.post('auth/register', body);
 
     const cookieStore = await cookies();
     const setCookie = apiRes.headers['set-cookie'];
@@ -23,26 +23,22 @@ export async function POST(req: NextRequest) {
           cookieStore.set(parsed.name, parsed.value, parsed);
         }
       }
-      return NextResponse.json(apiRes.data, { status: apiRes.status });
+      return NextResponse.json(apiRes.data, { status: 201 });
     }
 
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   } catch (error) {
-    // Вызываем логирование для всех типов ошибок
-    logErrorResponse(error);
-
     if (isAxiosError(error)) {
-      const status = error.response?.status || 500;
-      // Возвращаем полный эталонный объект ошибки (не упрощенный)
-      const errorData = {
-        message: error.message,
-        response: error.response?.data,
-        ...(error.response?.data || {})
-      };
-
-      return NextResponse.json(errorData, { status });
+      logErrorResponse(error.response?.data);
+      return NextResponse.json(
+        { error: error.message, response: error.response?.data },
+        { status: error.status }
+      );
     }
-
-    return NextResponse.json({ error: 'Internal Server Error', message: (error as Error).message }, { status: 500 });
+    logErrorResponse({ message: (error as Error).message });
+    return NextResponse.json(
+      { error: 'Internal Server Error' },
+      { status: 500 }
+    );
   }
 }

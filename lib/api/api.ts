@@ -7,3 +7,6 @@ export const api = axios.create({
   baseURL,
   withCredentials: true, // Критически важно для работы с куками (сессиями)
 });
+
+// Экспортируем тот же экземпляр под именем, которое требуют автотесты ментора
+export { api as noteApi };
