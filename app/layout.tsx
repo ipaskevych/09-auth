@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Roboto } from 'next/font/google';
 import './globals.css';
 import TanStackProvider from '@/components/TanStackProvider/TanStackProvider';
+import AuthProvider from '@/components/AuthProvider/AuthProvider';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
 
@@ -44,21 +45,15 @@ export default function RootLayout({
   modal: React.ReactNode;
 }) {
   return (
-    <html lang="uk">
-      {/* 3. Применяем класс шрифта к тегу body */}
-      <body className={roboto.className}>
+    <html lang="uk" className={roboto.variable}>
+      <body>
         <TanStackProvider>
-          {/* Верхнее меню навигации (шапка сайта) */}
-          <Header />
-
-          {/* Основной контент страниц приложения */}
-          <main>{children}</main>
-
-          {/* Слот для перехватывающих модальных окон деталей заметки */}
-          {modal}
-
-          {/* Подвал сайта */}
-          <Footer />
+          <AuthProvider>
+            <Header />
+            <main>{children}</main>
+            {modal}
+            <Footer />
+          </AuthProvider>
         </TanStackProvider>
       </body>
     </html>

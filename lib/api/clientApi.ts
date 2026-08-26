@@ -1,35 +1,32 @@
 import { api } from './api';
-import { User, AuthResponse } from '@/types/user';
+import { User } from '@/types/user';
+import { AuthResponse } from '@/types/auth';
 import { Note, NotesFilters } from '@/types/note';
 
 // === Заметки (Notes) ===
 export const fetchNotes = async (filters?: NotesFilters): Promise<Note[]> => {
-  const { data } = await api.get<Note[]>('/notes', { params: filters });
-  return data;
+  return (await api.get<Note[]>('/notes', { params: filters })).data;
 };
 
 export const fetchNoteById = async (id: string): Promise<Note> => {
-  const { data } = await api.get<Note>(`/notes/${id}`);
-  return data;
+  return (await api.get<Note>(`/notes/${id}`)).data;
 };
 
 export const createNote = async (noteData: Omit<Note, 'id'>): Promise<Note> => {
-  const { data } = await api.post<Note>('/notes', noteData);
-  return data;
+  return (await api.post<Note>('/notes', noteData)).data;
 };
 
 export const deleteNote = async (id: string): Promise<Note> => {
-  const { data } = await api.delete<Note>(`/notes/${id}`);
-  return data;
+  return (await api.delete<Note>(`/notes/${id}`)).data;
 };
 
 // === Аутентификация (Auth) ===
-export const register = async (authData: Record<string, any>): Promise<AuthResponse> => {
+export const register = async (authData: { email: string; password: string }): Promise<AuthResponse> => {
   const { data } = await api.post<AuthResponse>('/auth/register', authData);
   return data;
 };
 
-export const login = async (authData: Record<string, any>): Promise<AuthResponse> => {
+export const login = async (authData: { email: string; password: string }): Promise<AuthResponse> => {
   const { data } = await api.post<AuthResponse>('/auth/login', authData);
   return data;
 };
@@ -49,7 +46,7 @@ export const getMe = async (): Promise<User> => {
   return data;
 };
 
-export const updateMe = async (userData: Partial<User>): Promise<User> => {
+export const updateMe = async (userData: { username: string }): Promise<User> => {
   const { data } = await api.patch<User>('/users/me', userData);
   return data;
 };

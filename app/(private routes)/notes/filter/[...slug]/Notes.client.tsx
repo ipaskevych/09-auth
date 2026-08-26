@@ -36,27 +36,35 @@ export default function NotesClient({ tag }: NotesClientProps) {
         {/* Верхняя панель управления */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '60px', marginBottom: '40px', width: '100%', gap: '20px' }}>
           <SearchBox value={search} onChange={(val) => { setSearch(val); setPage(1); }} />
-
           
           <Link href="/notes/action/create" className={pageCss.createButton}>
-  Create Note
-</Link>
-          </div>
-          {data && data.length > 0 && (
-           
-            
-            <Pagination
-              pageCount={1}
-              forcePage={page - 1}
-              onPageChange={(selectedItem) => setPage(selectedItem.selected + 1)}
-            />
-          )}
+            Create Note
+          </Link>
         </div>
 
-        {/* Список заметок */}
-        <NoteList notes={data || []} />
-        
+        {/* Безопасно извлекаем массив заметок и считаем количество страниц */}
+        {(() => {
+          const notesArray = Array.isArray(data) ? data : (data as any)?.notes || [];
+          const totalNotes = Array.isArray(data) ? data.length : (data as any)?.totalCount || (data as any)?.total || 0;
+          const pageCount = Math.ceil(totalNotes / perPage) || 1;
+
+          return (
+            <>
+              {notesArray.length > 0 && (
+                <Pagination
+                  pageCount={pageCount}
+                  forcePage={page - 1}
+                  onPageChange={(selectedItem) => setPage(selectedItem.selected + 1)}
+                />
+              )}
+
+              {/* Список заметок рендерится только при наличии элементов */}
+              {notesArray.length > 0 && <NoteList notes={notesArray} />}
+            </>
+          );
+        })()}
+
       </div>
-    
+    </div>
   );
 }

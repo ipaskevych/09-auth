@@ -4,14 +4,14 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '://cloudinary.com',
+        hostname: 'cloudinary.com',
       },
       {
         protocol: 'https',
-        hostname: 'sc.goit.global',
+        hostname: 'ac.goit.global',
       },
     ],
   },
 };
 
-module.exports = nextConfig;
+export default nextConfig;

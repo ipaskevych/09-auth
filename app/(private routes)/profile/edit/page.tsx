@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useState } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/authStore';
 import { updateMe } from '@/lib/api/clientApi';
@@ -53,12 +54,12 @@ export default function EditProfilePage() {
 
         {/* Отображаем аватарку текущего пользователя */}
         <div className={css.avatarWrapper || ''}>
-          <img 
-            src={user.avatar || '/default-avatar.png'} 
-            alt="User Avatar" 
-            width={128} 
-            height={128} 
-            className={css.avatar} 
+          <Image
+            src={user.avatar || '/default-avatar.png'}
+            alt="User Avatar"
+            width={128}
+            height={128}
+            className={css.avatar}
           />
         </div>
 

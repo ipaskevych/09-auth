@@ -31,11 +31,7 @@ export const getMe = async (): Promise<User> => {
   return data;
 };
 
-export const checkSession = async (): Promise<User | null> => {
-  try {
-    const { data } = await api.get<User | null>('/auth/session', getAuthHeaders());
-    return data;
-  } catch (error) {
-    return null;
-  }
+export const checkSession = async (): Promise<import('axios').AxiosResponse<User>> => {
+  const response = await api.get<User>('/auth/session', getAuthHeaders());
+  return response;
 };

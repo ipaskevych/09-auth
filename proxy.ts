@@ -1,31 +1,47 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { checkSession } from './lib/api/serverApi';
 
 // Списки приватных и публичных маршрутов для проверки доступа
 const privateRoutes = ['/profile', '/notes'];
 const authRoutes = ['/sign-in', '/sign-up'];
 
-export function proxy(request: NextRequest) {
-  // Получаем токен сессии из cookies браузера
-  const token = request.cookies.get('session')?.value;
+export async function proxy(request: NextRequest) {
+  // 1. Получаем токены явно из cookies браузера, как просил ментор
+  let accessToken = request.cookies.get('accessToken')?.value;
+  const refreshToken = request.cookies.get('refreshToken')?.value;
   const { pathname } = request.nextUrl;
 
-  // 1. Если неавторизованный пользователь идет на защищенную страницу -> на логин
+  // Переменная для хранения ответа, если нам потребуется обновить сессию
+  let response = NextResponse.next();
+
+  // 2. Если accessToken отсутствует, но есть refreshToken — пробуем обновить сессию
+  if (!accessToken && refreshToken) {
+    try {
+      const sessionRes = await checkSession();
+      
+      if (sessionRes.status === 200) {
+        // Если проверка успешна, бэкенд через getAuthHeaders/axios обновил куки в текущем контексте.
+        // Чтобы middleware пропустил запрос дальше, симулируем наличие accessToken
+        accessToken = 'valid';
+      }
+    } catch (error) {
+      // Если checkSession упал с ошибкой — значит refreshToken невалиден
+      accessToken = undefined;
+    }
+  }
+
+  // 3. Если неавторизованный пользователь идет на защищенную страницу -> на логин
   const isPrivateRoute = privateRoutes.some((route) => pathname.startsWith(route));
-  if (isPrivateRoute && !token) {
+  if (isPrivateRoute && !accessToken) {
     return NextResponse.redirect(new URL('/sign-in', request.url));
   }
 
-  // 2. Если авторизованный пользователь идет на логин/регистрацию -> в профиль
+  // 4. Если авторизованный пользователь идет на логин/регистрацию -> РЕДИРЕКТ НА ГЛАВНУЮ (/)
   const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
-  if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL('/profile', request.url));
+  if (isAuthRoute && accessToken) {
+    return NextResponse.redirect(new URL('/', request.url));
   }
 
-  return NextResponse.next();
+  return response;
 }
-
-// Конфиг с маской путей (matcher), чтобы прокси срабатывал только для нужных страниц
-export const config = {
-  matcher: ['/profile/:path*', '/notes/:path*', '/sign-in', '/sign-up'],
-};

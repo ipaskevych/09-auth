@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { noteApi } from '../../api'; 
+import { api } from '../../api'; 
 import { parseSetCookie } from 'cookie';
 import { isAxiosError } from 'axios';
 import { logErrorResponse } from '../../_utils/utils';
@@ -18,7 +18,7 @@ export async function GET() {
 
     // 2. Если accessToken истёк, но есть refreshToken, пробуем обновить сессию
     if (refreshToken) {
-      const apiRes = await noteApi.get('auth/me', {
+      const apiRes = await api.get('auth/me', {
         headers: {
           Cookie: cookieStore.toString(),
         },
@@ -45,8 +45,18 @@ export async function GET() {
 
   } catch (error) {
     if (isAxiosError(error)) {
-      return logErrorResponse(error);
+      // 1. Сначала просто логируем ошибку в консоль
+      logErrorResponse(error);
+
+      // 2. Достаем реальный статус (например, 401) и данные ошибки от внешнего API
+      const status = error.response?.status || 500;
+      const errorData = error.response?.data || { error: error.message };
+
+      // 3. Возвращаем их клиенту
+      return NextResponse.json(errorData, { status });
     }
+
+    // Если это какая-то другая непредвиденная ошибка кода
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

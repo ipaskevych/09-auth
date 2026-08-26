@@ -23,22 +23,21 @@ export async function POST(req: NextRequest) {
           cookieStore.set(parsed.name, parsed.value, parsed);
         }
       }
-      return NextResponse.json(apiRes.data, { status: 201 });
+      return NextResponse.json(apiRes.data, { status: apiRes.status });
     }
 
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   } catch (error) {
     if (isAxiosError(error)) {
-      logErrorResponse(error.response?.data);
-      return NextResponse.json(
-        { error: error.message, response: error.response?.data },
-        { status: error.status }
-      );
+      logErrorResponse(error);
+      
+      const status = error.response?.status || 500;
+      const errorData = error.response?.data || { error: error.message };
+
+      return NextResponse.json(errorData, { status });
     }
-    logErrorResponse({ message: (error as Error).message });
-    return NextResponse.json(
-      { error: 'Internal Server Error' },
-      { status: 500 }
-    );
+
+    logErrorResponse(error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

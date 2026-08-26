@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { noteApi } from '../api';
+import { api } from '../api';
 import { cookies } from 'next/headers';
 import { isAxiosError } from 'axios';
 import { logErrorResponse } from '../_utils/utils';
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const rawTag = request.nextUrl.searchParams.get('tag') ?? '';
     const tag = rawTag === 'All' ? '' : rawTag;
 
-    const res = await noteApi('/notes', {
+    const res = await api('/notes', {
       params: {
         ...(search !== '' && { search }),
         page,
@@ -25,15 +25,17 @@ export async function GET(request: NextRequest) {
     });
 
     return NextResponse.json(res.data, { status: res.status });
-  } catch (error) {
+   } catch (error) {
     if (isAxiosError(error)) {
-      logErrorResponse(error.response?.data);
-      return NextResponse.json(
-        { error: error.message, response: error.response?.data },
-        { status: error.status }
-      );
+      logErrorResponse(error);
+      
+      const status = error.response?.status || 500;
+      const errorData = error.response?.data || { error: error.message };
+
+      return NextResponse.json(errorData, { status });
     }
-    logErrorResponse({ message: (error as Error).message });
+
+    logErrorResponse(error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
@@ -44,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    const res = await noteApi.post('/notes', body, {
+    const res = await api.post('/notes', body, {
       headers: {
         Cookie: cookieStore.toString(),
         'Content-Type': 'application/json',
@@ -52,15 +54,17 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(res.data, { status: res.status });
-  } catch (error) {
-    if (isAxiosError(error)) {
-      logErrorResponse(error.response?.data);
-      return NextResponse.json(
-        { error: error.message, response: error.response?.data },
-        { status: error.status }
-      );
-    }
-    logErrorResponse({ message: (error as Error).message });
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+} catch (error) {
+  if (isAxiosError(error)) {
+    logErrorResponse(error);
+    
+    const status = error.response?.status || 500;
+    const errorData = error.response?.data || { error: error.message };
+
+    return NextResponse.json(errorData, { status });
   }
+
+  logErrorResponse(error);
+  return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+}
 }
