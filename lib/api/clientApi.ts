@@ -25,8 +25,8 @@ export const clientApi = {
   },
 
   // --- Аутентификация ---
-  async register({ email, password, username }: any): Promise<User> {
-    const { data } = await api.post('/auth/register', { email, password, name: username });
+  async register({ email, password }: any): Promise<User> {
+    const { data } = await api.post('/auth/register', { email, password });
     return data;
   },
 
