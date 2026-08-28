@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers'; // Асинхронные куки Next.js 15
 import { isAxiosError } from 'axios';
 // Правильные относительные пути с учетом структуры папок:
-import { noteApi } from '../../api'; 
+import { api } from '../../api'; 
 import { logErrorResponse } from '../../_utils/utils'; 
 
 export async function GET() {
@@ -11,7 +11,7 @@ export async function GET() {
     const cookieStore = await cookies();
 
     // Запрос к внешнему бэкенду для проверки текущей сессии
-    const apiRes = await noteApi.get('/auth/session', {
+    const apiRes = await api.get('/auth/session', {
       headers: {
         // Передаем куки в виде строки заголовка
         Cookie: cookieStore.toString(),

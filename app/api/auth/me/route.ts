@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { noteApi } from '../../api';
+import { api } from '../../api';
 import { parseSetCookie } from 'cookie';
 import { isAxiosError } from 'axios';
 import { logErrorResponse } from '../../_utils/utils';
@@ -16,7 +16,7 @@ export async function GET() {
     }
 
     if (refreshToken) {
-      const apiRes = await noteApi.get('auth/me', {
+      const apiRes = await api.get('auth/me', {
         headers: {
           Cookie: cookieStore.toString(),
         },

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import AuthNavigation from '@/components/AuthNavigation/AuthNavigation'; // Добавили импорт нашей авторизации
 import css from './Header.module.css';
 
 export default function Header() {
@@ -15,12 +16,14 @@ export default function Header() {
           <li>
             <Link href="/notes/filter/all">Notes</Link>
           </li>
-          {/* Добавляем ссылку на страницу создания новой заметки */}
+          {/* Ссылка на страницу создания новой заметки */}
           <li>
             <Link href="/notes/action/create" className={css.createButton || ''}>
               Create Note
             </Link>
           </li>
+          {/* ТЗ: Добавляем в конец списка компонент AuthNavigation со ссылками на новые страницы */}
+          <AuthNavigation />
         </ul>
       </nav>
     </header>

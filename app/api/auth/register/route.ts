@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { api } from '../../api'; // Берется из app/api/api.ts
 import { cookies } from 'next/headers';
 import { parseSetCookie } from 'cookie';
 import { isAxiosError } from 'axios';
-
-// Исправлено: точные пути относительно папки register
-import { noteApi } from '../../api'; 
-import { logErrorResponse } from '../../_utils/utils'; 
+import { logErrorResponse } from '../../_utils/utils';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const apiRes = await noteApi.post('auth/register', body);
+    // Отправляем запрос на внешний бэкенд GoIT
+    const apiRes = await api.post('auth/register', body);
 
     const cookieStore = await cookies();
     const setCookie = apiRes.headers['set-cookie'];
@@ -25,7 +24,8 @@ export async function POST(req: NextRequest) {
           cookieStore.set(parsed.name, parsed.value, parsed);
         }
       }
-      return NextResponse.json(apiRes.data, { status: 201 });
+      // Возвращаем точный статус ответа сервера
+      return NextResponse.json(apiRes.data, { status: apiRes.status });
     }
 
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       logErrorResponse(error.response?.data);
       return NextResponse.json(
         { error: error.message, response: error.response?.data },
-        { status: error.status || 400 }
+        { status: error.response?.status || 400 }
       );
     }
     logErrorResponse({ message: (error as Error).message });
