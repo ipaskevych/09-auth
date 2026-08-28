@@ -1,6 +1,7 @@
 import React from 'react';
 import { Metadata } from 'next';
 import Image from 'next/image';
+import Link from 'next/link';
 import { serverApi } from '@/lib/api/serverApi';
 import css from './ProfilePage.module.css';
 
@@ -17,9 +18,10 @@ export default async function ProfilePage() {
       <div className={css.profileCard}>
         <div className={css.header}>
           <h1 className={css.formTitle}>Profile Page</h1>
-          <a href="/profile/edit" className={css.editProfile}>
+          {/* 2. ИСПРАВЛЕНО: Заменили обычный тег <a> на компонент <Link> */}
+          <Link href="/profile/edit" className={css.editProfile}>
             Edit Profile
-          </a>
+          </Link>
         </div>
         
         <div className={css.avatarWrapper}>

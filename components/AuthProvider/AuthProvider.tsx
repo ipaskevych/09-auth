@@ -12,14 +12,19 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   useEffect(() => {
     async function initAuth() {
       try {
-        const user = await clientApi.checkSession();
+        // 1. Сначала строго проверяем валидность сессии по ТЗ
+        await clientApi.checkSession();
+        
+        // 2. Если сессия валидна (не выбросила ошибку), отдельным запросом получаем данные пользователя
+        const user = await clientApi.getMe();
+        
         if (user) {
           setUser(user);
         } else {
           clearIsAuthenticated();
         }
       } catch (error) {
-        console.error('Session check failed:', error);
+        console.error('Session verification or fetching user failed:', error);
         clearIsAuthenticated();
       } finally {
         setIsInitializing(false);
@@ -30,7 +35,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
   }, [setUser, clearIsAuthenticated]);
 
   if (isInitializing) {
-    return null; // Предотвращает мигание старого интерфейса при загрузке
+    return null; // Предотвращает мигание интерфейса
   }
 
   return <>{children}</>;

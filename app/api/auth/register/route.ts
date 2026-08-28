@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { api } from '../../api'; // Берется из app/api/api.ts
+import { api } from '../../api';
 import { cookies } from 'next/headers';
 import { parseSetCookie } from 'cookie';
 import { isAxiosError } from 'axios';
@@ -9,7 +9,6 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    // Отправляем запрос на внешний бэкенд GoIT
     const apiRes = await api.post('auth/register', body);
 
     const cookieStore = await cookies();
@@ -24,7 +23,6 @@ export async function POST(req: NextRequest) {
           cookieStore.set(parsed.name, parsed.value, parsed);
         }
       }
-      // Возвращаем точный статус ответа сервера
       return NextResponse.json(apiRes.data, { status: apiRes.status });
     }
 
@@ -34,7 +32,7 @@ export async function POST(req: NextRequest) {
       logErrorResponse(error.response?.data);
       return NextResponse.json(
         { error: error.message, response: error.response?.data },
-        { status: error.response?.status || 400 }
+        { status: error.status }
       );
     }
     logErrorResponse({ message: (error as Error).message });

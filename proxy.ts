@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { serverApi } from './lib/api/serverApi'; // Проверяем путь к твоему серверному API
+import { serverApi } from './lib/api/serverApi'; // Проверяем относительный путь к твоему серверному API
 
 const privateRoutes = ['/profile', '/notes'];
 const publicRoutes = ['/sign-in', '/sign-up'];
@@ -36,34 +36,39 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // Спершу перевіряємо самі куки, а не одразу ходимо на сервер.
+  // Считываем токены сессии бэкенда
   const accessToken = request.cookies.get('accessToken')?.value;
   const refreshToken = request.cookies.get('refreshToken')?.value;
 
   let isAuthenticated = Boolean(accessToken);
   let setCookieHeader: string | string[] | undefined;
 
-  // accessToken відсутній, але є refreshToken — намагаємось оновити сесію.
+  // Если accessToken отсутствует, но есть refreshToken — обновляем сессию
   if (!isAuthenticated && refreshToken) {
     try {
-      // Вызываем метод из твоего серверного API
+      // 1. ИСПРАВЛЕНО: Получаем полный ответ от сервера
       const sessionResponse = await serverApi.checkSession();
-      // Если сессия успешно вернула данные пользователя, значит мы авторизованы
-      isAuthenticated = Boolean(sessionResponse);
+      
+      // Проверяем успешность (если сервер вернул статус 200)
+      isAuthenticated = sessionResponse.status === 200;
+      
+      // 2. ИСПРАВЛЕНО: Вытягиваем новые заголовки set-cookie из ответа, о которых просил ментор
+      setCookieHeader = sessionResponse.headers['set-cookie'];
     } catch (error) {
       console.error('proxy: failed to refresh session:', error);
       isAuthenticated = false;
     }
   }
 
+  // Редирект неавторизованного пользователя на страницу входа
   if (isPrivateRoute && !isAuthenticated) {
     const response = NextResponse.redirect(new URL('/sign-in', request.url));
     return applySetCookie(response, setCookieHeader);
   }
 
-  // Если авторизован, ТЗ просит перенаправлять на страницу профиля /profile
+  // 3. ИСПРАВЛЕНО: Редирект авторизованного пользователя ведет на главную страницу `/` по требованию ментора
   if (isPublicRoute && isAuthenticated) {
-    const response = NextResponse.redirect(new URL('/profile', request.url));
+    const response = NextResponse.redirect(new URL('/', request.url));
     return applySetCookie(response, setCookieHeader);
   }
 
