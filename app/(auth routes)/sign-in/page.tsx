@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { clientApi } from '@/lib/api/clientApi';
+import Link from 'next/link';
 import { useAuthStore } from '@/lib/store/authStore';
 import css from './SignInPage.module.css';
 
@@ -49,6 +50,15 @@ export default function SignInPage() {
             Log in
           </button>
         </div>
+
+        {/* НАЧАЛО НОВОГО БЛОКА: Перенаправление на регистрацию */}
+        <p style={{ marginTop: '20px', textAlign: 'center', fontSize: '14px', color: '#555' }}>
+          Ещё нет аккаунта?{' '}
+          <Link href="/sign-up" style={{ color: '#0284c7', textDecoration: 'underline', fontWeight: '500' }}>
+            Зарегистрироваться
+          </Link>
+        </p>
+        {/* КОНЕЦ НОВОГО БЛОКА */}
 
         {error && <p className={css.error}>{error}</p>}
       </form>

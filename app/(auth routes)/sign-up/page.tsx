@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/authStore';
+import Link from 'next/link'; // Добавили импорт Link
 import { clientApi } from '@/lib/api/clientApi';
 import css from './SignUpPage.module.css';
 
@@ -49,6 +50,15 @@ export default function SignUpPage() {
             Register
           </button>
         </div>
+
+        {/* НАЧАЛО НОВОГО БЛОКА: Перенаправление на логин */}
+        <p style={{ marginTop: '20px', textAlign: 'center', fontSize: '14px', color: '#555' }}>
+          Уже есть аккаунт?{' '}
+          <Link href="/sign-in" style={{ color: '#0284c7', textDecoration: 'underline', fontWeight: '500' }}>
+            Войти
+          </Link>
+        </p>
+        {/* КОНЕЦ НОВОГО БЛОКА */}
 
         {error && <p className={css.error}>{error}</p>}
       </form>
