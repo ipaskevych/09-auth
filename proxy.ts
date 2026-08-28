@@ -1,81 +1,124 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
-import { serverApi } from './lib/api/serverApi'; // Проверяем относительный путь к твоему серверному API
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { parseSetCookie } from "cookie";
+import { serverApi } from "./lib/api/serverApi"; // ИСПРАВЛЕНО: импортируем объект serverApi
 
-const privateRoutes = ['/profile', '/notes'];
-const publicRoutes = ['/sign-in', '/sign-up'];
+const protectedRoutes = ["/profile", "/notes"];
+const authRoutes = ["/sign-in", "/sign-up"];
 
-// Вспомогательная функция для проброса обновленных кук дальше в браузер
-function applySetCookie(
-  response: NextResponse,
-  setCookie: string | string[] | undefined
-): NextResponse {
-  if (!setCookie) {
-    return response;
+function getCookieValueFromHeaders(
+  setCookieHeaders: string[],
+  cookieName: string,
+): string | undefined {
+  for (const header of setCookieHeaders) {
+    const parsed = parseSetCookie(header);
+    if (parsed && parsed.name === cookieName) {
+      return parsed.value;
+    }
   }
-
-  const cookieArray = Array.isArray(setCookie) ? setCookie : [setCookie];
-  for (const cookieStr of cookieArray) {
-    response.headers.append('set-cookie', cookieStr);
-  }
-
-  return response;
+  return undefined;
 }
 
 export async function proxy(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
 
-  const isPrivateRoute = privateRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
-  const isPublicRoute = publicRoutes.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  );
+  // ИСПРАВЛЕНО: Читаем токены напрямую из входящего request, а не через next/headers
+  let accessToken = request.cookies.get("accessToken")?.value;
+  const refreshToken = request.cookies.get("refreshToken")?.value;
 
-  if (!isPrivateRoute && !isPublicRoute) {
-    return NextResponse.next();
-  }
+  let sessionResponseCookies: string[] = [];
 
-  // Считываем токены сессии бэкенда
-  const accessToken = request.cookies.get('accessToken')?.value;
-  const refreshToken = request.cookies.get('refreshToken')?.value;
-
-  let isAuthenticated = Boolean(accessToken);
-  let setCookieHeader: string | string[] | undefined;
-
-  // Если accessToken отсутствует, но есть refreshToken — обновляем сессию
-  if (!isAuthenticated && refreshToken) {
+  // Если accessToken пропал, но есть refreshToken — берем куки из запроса и обновляем сессию
+  if (!accessToken && refreshToken) {
     try {
-      // 1. ИСПРАВЛЕНО: Получаем полный ответ от сервера
-      const sessionResponse = await serverApi.checkSession();
+      const incomingCookies = request.headers.get("cookie") || "";
       
-      // Проверяем успешность (если сервер вернул статус 200)
-      isAuthenticated = sessionResponse.status === 200;
-      
-      // 2. ИСПРАВЛЕНО: Вытягиваем новые заголовки set-cookie из ответа, о которых просил ментор
-      setCookieHeader = sessionResponse.headers['set-cookie'];
+      // ИСПРАВЛЕНО: Передаем живые куки запроса в метод checkSession
+      const sessionResponse = await serverApi.checkSession({
+        headers: {
+          Cookie: incomingCookies,
+        },
+      });
+
+      if (sessionResponse && sessionResponse.status === 200) {
+        const setCookieHeaders = sessionResponse.headers["set-cookie"];
+        if (setCookieHeaders) {
+          sessionResponseCookies =
+            Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
+
+          const newAccessToken = getCookieValueFromHeaders(
+            sessionResponseCookies,
+            "accessToken",
+          );
+
+          if (newAccessToken) {
+            accessToken = newAccessToken;
+          }
+        }
+      }
     } catch (error) {
-      console.error('proxy: failed to refresh session:', error);
-      isAuthenticated = false;
+      console.error("Failed to refresh session in proxy:", error);
     }
   }
 
-  // Редирект неавторизованного пользователя на страницу входа
-  if (isPrivateRoute && !isAuthenticated) {
-    const response = NextResponse.redirect(new URL('/sign-in', request.url));
-    return applySetCookie(response, setCookieHeader);
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    pathname.startsWith(route),
+  );
+  const isAuthRoute = authRoutes.some((route) => pathname.startsWith(route));
+
+  if (isProtectedRoute && !accessToken) {
+    const loginUrl = new URL("/sign-in", request.url);
+    const fullCallbackUrl = pathname + search;
+
+    loginUrl.searchParams.set("callbackUrl", fullCallbackUrl);
+
+    const response = NextResponse.redirect(loginUrl);
+    setCookiesIfPresent(response, sessionResponseCookies);
+    return response;
   }
 
-  // 3. ИСПРАВЛЕНО: Редирект авторизованного пользователя ведет на главную страницу `/` по требованию ментора
-  if (isPublicRoute && isAuthenticated) {
-    const response = NextResponse.redirect(new URL('/', request.url));
-    return applySetCookie(response, setCookieHeader);
+  if (isAuthRoute && accessToken) {
+    const response = NextResponse.redirect(new URL("/", request.url));
+    setCookiesIfPresent(response, sessionResponseCookies);
+    return response;
   }
 
   const response = NextResponse.next();
-  return applySetCookie(response, setCookieHeader);
+  setCookiesIfPresent(response, sessionResponseCookies);
+  return response;
+}
+
+function setCookiesIfPresent(response: NextResponse, cookiesList: string[]) {
+  if (cookiesList && cookiesList.length > 0) {
+    cookiesList.forEach((cookieString) => {
+      const parsed = parseSetCookie(cookieString);
+
+      if (parsed && parsed.name && typeof parsed.value === "string") {
+        let sameSite: "strict" | "lax" | "none" | undefined = undefined;
+
+        if (typeof parsed.sameSite === "string") {
+          const lower = parsed.sameSite.toLowerCase();
+          if (lower === "strict" || lower === "lax" || lower === "none") {
+            sameSite = lower;
+          }
+        }
+
+        response.cookies.set({
+          name: parsed.name,
+          value: parsed.value,
+          path: parsed.path || "/",
+          domain: parsed.domain || undefined,
+          expires: parsed.expires ? new Date(parsed.expires) : undefined,
+          httpOnly: parsed.httpOnly ?? undefined,
+          secure: parsed.secure ?? undefined,
+          sameSite,
+        });
+      }
+    });
+  }
 }
 
 export const config = {
-  matcher: ['/profile/:path*', '/notes/:path*', '/sign-in', '/sign-up'],
+  // ИСПРАВЛЕНО: явно добавили корни /profile и /notes в матчер
+  matcher: ["/profile", "/profile/:path*", "/notes", "/notes/:path*", "/sign-in", "/sign-up"],
 };
