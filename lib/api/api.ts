@@ -1,12 +1,11 @@
 import axios from 'axios';
 
-// Базовый URL формируется на основе переменной окружения
-const baseURL = process.env.NEXT_PUBLIC_API_URL + '/api';
+const baseURL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000') + '/api';
 
 export const api = axios.create({
   baseURL,
-  withCredentials: true, // Критически важно для работы с куками (сессиями)
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
-
-// Экспортируем тот же экземпляр под именем, которое требуют автотесты ментора
-export { api as noteApi };

@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { fetchNoteById } from '@/lib/api/clientApi';
+import { clientApi } from '@/lib/api/clientApi'; // Исправили импорт на клиентский API по ТЗ 9
 import Modal from '@/components/Modal/Modal';
 
 interface Props {
@@ -13,7 +13,8 @@ export default function NoteDetailsModalClient({ id }: Props) {
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['note', id],
-    queryFn: () => fetchNoteById(id),
+    // Добавили clientApi. перед вызовом функции
+    queryFn: () => clientApi.fetchNoteById(id),
     refetchOnMount: false,
   });
 

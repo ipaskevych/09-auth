@@ -1,51 +1,42 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { login } from '../../../lib/api/clientApi';
-import { useAuthStore } from '../../../lib/store/authStore';
+import { clientApi } from '@/lib/api/clientApi';
+import { useAuthStore } from '@/lib/store/authStore';
 import css from './SignInPage.module.css';
 
 export default function SignInPage() {
   const router = useRouter();
   const setUser = useAuthStore((state) => state.setUser);
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     setError(null);
-    setIsLoading(true);
 
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(e.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
     try {
-      const response = await login({ email, password });
-      
-      // Записываем залогиненного пользователя в Zustand-стор
-      if (response && response.user) {
-        setUser(response.user);
-      }
-      
+      const user = await clientApi.login({ email, password });
+      setUser(user);
       router.push('/profile');
     } catch (err: any) {
-      const message = err.response?.data?.message || 'Invalid email or password.';
-      setError(message);
-    } finally {
-      setIsLoading(false);
+      const errMsg = err.response?.data?.error || err.message || 'Authentication failed';
+      setError(errMsg);
     }
   };
 
   return (
     <main className={css.mainContent}>
-      <h1 className={css.formTitle}>Sign in</h1>
-      
       <form className={css.form} onSubmit={handleSubmit}>
+        <h1 className={css.formTitle}>Sign in</h1>
+
         <div className={css.formGroup}>
           <label htmlFor="email">Email</label>
-          <input id="email" name="email" type="email" className={css.input} required />
+          <input id="email" type="email" name="email" className={css.input} required />
         </div>
 
         <div className={css.formGroup}>
@@ -54,20 +45,13 @@ export default function SignInPage() {
         </div>
 
         <div className={css.actions}>
-          <button type="submit" className={css.submitButton} disabled={isLoading}>
-            {isLoading ? 'Logging in...' : 'Login'}
+          <button type="submit" className={css.submitButton}>
+            Log in
           </button>
         </div>
+
+        {error && <p className={css.error}>{error}</p>}
       </form>
-
-      <p className={css.profileInfo || ''} style={{ marginTop: '20px', textAlign: 'center', fontSize: '16px' }}>
-  Don't have an account?{' '}
-  <a href="/sign-up" style={{ color: '#0056fd', textDecoration: 'underline', fontWeight: '600' }}>
-    Sign up
-  </a>
-</p>
-
-      {error && <p className={css.error}>{error}</p>}
     </main>
   );
 }

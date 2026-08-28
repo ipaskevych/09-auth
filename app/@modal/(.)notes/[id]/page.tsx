@@ -1,5 +1,5 @@
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
-import { fetchNoteById } from '@/lib/api/serverApi';
+import { serverApi } from '@/lib/api/serverApi'; // Исправили импорт на серверный API по ТЗ 9
 import NotePreviewClient from './NotePreview.client'; 
 
 interface Props {
@@ -12,9 +12,10 @@ export default async function NoteDetailsModalPage({ params }: Props) {
   const { id } = await params;
   const queryClient = new QueryClient();
 
+  // Исправлено: Вызываем serverApi перед функцией prefetch на сервере
   await queryClient.prefetchQuery({
     queryKey: ['note', id],
-    queryFn: () => fetchNoteById(id),
+    queryFn: () => serverApi.fetchNoteById(id),
   });
 
   return (

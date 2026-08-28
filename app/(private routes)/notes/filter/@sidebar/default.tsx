@@ -1,5 +1,7 @@
 import Link from 'next/link';
+// Исправлено: заменили абсолютный путь на точный относительный путь
 import css from './SidebarNotes.module.css';
+
 const tags = ['Todo', 'Work', 'Personal', 'Meeting', 'Shopping'];
 
 export default function SidebarNotes() {

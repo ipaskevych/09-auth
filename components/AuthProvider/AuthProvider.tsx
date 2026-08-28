@@ -1,39 +1,37 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
-import { useAuthStore } from '../../lib/store/authStore';
-import { checkSession, getMe } from '../../lib/api/clientApi';
+import React, { useEffect, useState } from 'react';
+import { clientApi } from '@/lib/api/clientApi';
+import { useAuthStore } from '@/lib/store/authStore';
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export default function AuthProvider({ children }: AuthProviderProps) {
+export default function AuthProvider({ children }: { children: React.ReactNode }) {
   const setUser = useAuthStore((state) => state.setUser);
   const clearIsAuthenticated = useAuthStore((state) => state.clearIsAuthenticated);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    const initAuth = async () => {
+    async function initAuth() {
       try {
-        // Проверяем, активна ли сессия (валидны ли куки)
-        const session = await checkSession();
-        
-        if (session) {
-          // Если сессия валидна, запрашиваем актуальные данные профиля
-          const userData = await getMe();
-          setUser(userData);
+        const user = await clientApi.checkSession();
+        if (user) {
+          setUser(user);
         } else {
-          // Если сессии нет, очищаем глобальный стейт
           clearIsAuthenticated();
         }
       } catch (error) {
-        // В случае любой ошибки (например, токен истек) сбрасываем авторизацию
+        console.error('Session check failed:', error);
         clearIsAuthenticated();
+      } finally {
+        setIsInitializing(false);
       }
-    };
+    }
 
     initAuth();
   }, [setUser, clearIsAuthenticated]);
+
+  if (isInitializing) {
+    return null; // Предотвращает мигание старого интерфейса при загрузке
+  }
 
   return <>{children}</>;
 }

@@ -2,9 +2,9 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { createNote } from '@/lib/api/clientApi';
+import { clientApi } from '@/lib/api/clientApi';
 import { useNoteStore } from '@/lib/store/noteStore';
-import { NewNote, Note } from '@/types/note';
+import { NewNote } from '@/types/note';
 import css from './NoteForm.module.css';
 
 export default function NoteForm() {
@@ -15,7 +15,9 @@ export default function NoteForm() {
   const { draft, setDraft, clearDraft } = useNoteStore();
 
   const mutation = useMutation({
-    mutationFn: createNote,
+    // Исправлено: функция принимает объект заметки noteData и отправляет его в API
+    mutationFn: (noteData: { title: string; content: string; tag: string }) => 
+      clientApi.createNote(noteData),
     onSuccess: () => {
       // Инвалидируем кэш заметок для TanStack Query
       queryClient.invalidateQueries({ queryKey: ['notes'] });
@@ -36,14 +38,15 @@ export default function NoteForm() {
 
   // Обработчик отправки формы
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
-
-  mutation.mutate({
-    ...draft,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  } as Omit<Note, 'id'>);
-};
+    e.preventDefault();
+    
+    // Передаем весь объект draft, приведенный к типу NewNote
+    mutation.mutate({
+      title: draft.title,
+      content: draft.content,
+      tag: draft.tag
+    });
+  };
 
   // По ТЗ кнопка отмены должна возвращать пользователя назад, не очищая черновик
   const handleCancel = () => {

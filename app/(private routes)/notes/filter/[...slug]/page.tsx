@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
-import { fetchNotes } from '@/lib/api/clientApi';
+import { serverApi } from '@/lib/api/serverApi'; // Исправили импорт на серверный API по ТЗ 9
 import NotesClient from './Notes.client';
 
 interface Props {
@@ -30,13 +30,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: `https://08-zustand-nu-navy.vercel.app/${isAll ? 'all' : rawTag.toLowerCase()}`,
       siteName: 'NoteHub',
       images: [
-  {
-    url: `https://ac.goit.global/fullstack/react/notehub-og-meta.jpg`,
-    width: 1200,
-    height: 630,
-    alt: `NoteHub Filter ${filterName} Preview`,
-  },
-],
+        {
+          url: `https://ac.goit.global/fullstack/react/notehub-og-meta.jpg`,
+          width: 1200,
+          height: 630,
+          alt: `NoteHub Filter ${filterName} Preview`,
+        },
+      ],
       locale: 'uk_UA',
       type: 'website',
     },
@@ -53,9 +53,10 @@ export default async function NotesPage({ params }: Props) {
 
   const queryClient = new QueryClient();
 
+  // Исправлено: Вызываем serverApi и передаем параметры объектом по ТЗ 9
   await queryClient.prefetchQuery({
-    queryKey: ['notes', 1, 10, tagParam, ''],
-    queryFn: () => fetchNotes({ page: 1, perPage: 10, tag: tagParam, search: '' }),
+    queryKey: ['notes', 1, tagParam, ''],
+    queryFn: () => serverApi.fetchNotes({ page: 1, tag: tagParam, search: '' }),
   });
 
   return (

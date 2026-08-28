@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { noteApi } from '../../api';
 import { cookies } from 'next/headers';
 import { parseSetCookie } from 'cookie';
 import { isAxiosError } from 'axios';
-import { logErrorResponse } from '../../_utils/utils';
+// Правильные пути:
+import { noteApi } from '../../api'; 
+import { logErrorResponse } from '../../_utils/utils'; 
 
 export async function POST(req: NextRequest) {
   try {

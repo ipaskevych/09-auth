@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { deleteNote } from '@/lib/api/clientApi';
+import { clientApi } from '@/lib/api/clientApi';
 import type { Note } from '@/types/note'; // Исправили путь импорта типа
 import Link from 'next/link'; // Добавили Link для Next.js
 import css from './NoteList.module.css';
@@ -15,7 +15,7 @@ export default function NoteList({ notes }: NoteListProps) {
 
   // Мутация удаления и автоматическое обновление списка
   const mutation = useMutation({
-    mutationFn: deleteNote,
+    mutationFn: (id: string) => clientApi.deleteNote(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
     },

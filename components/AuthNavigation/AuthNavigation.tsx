@@ -1,28 +1,20 @@
 'use client';
 
-import Link from 'next/link';
+import React from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuthStore } from '../../lib/store/authStore';
-import { logout } from '../../lib/api/clientApi';
+import Link from 'next/link'; // Добавили импорт Link
+import { useAuthStore } from '@/lib/store/authStore';
+import { clientApi } from '@/lib/api/clientApi';
 import css from './AuthNavigation.module.css';
 
 export default function AuthNavigation() {
   const router = useRouter();
-  
-  // Берем данные, статус авторизации и функцию очистки из нашего Zustand-стора
-  const user = useAuthStore((state) => state.user);
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const clearIsAuthenticated = useAuthStore((state) => state.clearIsAuthenticated);
+  const { user, isAuthenticated, clearIsAuthenticated } = useAuthStore();
 
   const handleLogout = async () => {
     try {
-      // Вызываем логаут на бэкенде, чтобы удалить куки сессии
-      await logout();
-      
-      // Очищаем состояние в Zustand
+      await clientApi.logout();
       clearIsAuthenticated();
-      
-      // Перенаправляем пользователя на страницу логина
       router.push('/sign-in');
     } catch (error) {
       console.error('Logout failed:', error);
@@ -33,32 +25,33 @@ export default function AuthNavigation() {
     <>
       {isAuthenticated && user ? (
         <>
-          {/* Ссылки для авторизованного пользователя */}
           <li className={css.navigationItem}>
+            {/* Заменили <a> на <Link> */}
             <Link href="/profile" prefetch={false} className={css.navigationLink}>
               Profile
             </Link>
           </li>
-          
+
           <li className={css.navigationItem}>
             <p className={css.userEmail}>{user.email}</p>
-            <button type="button" className={css.logoutButton} onClick={handleLogout}>
+            <button className={css.logoutButton} onClick={handleLogout}>
               Logout
             </button>
           </li>
         </>
       ) : (
         <>
-          {/* Ссылки для неавторизованного пользователя */}
           <li className={css.navigationItem}>
+            {/* Заменили <a> на <Link> */}
             <Link href="/sign-in" prefetch={false} className={css.navigationLink}>
               Login
             </Link>
           </li>
-          
+
           <li className={css.navigationItem}>
+            {/* Заменили <a> на <Link> */}
             <Link href="/sign-up" prefetch={false} className={css.navigationLink}>
-              Sign Up
+              Sign up
             </Link>
           </li>
         </>

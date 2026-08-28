@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { QueryClient, dehydrate, HydrationBoundary } from '@tanstack/react-query';
-import { fetchNoteById } from '@/lib/api/serverApi';
+import { serverApi } from '@/lib/api/serverApi'; // Правильный серверный импорт по ТЗ 9
 import NoteDetailsClient from './NoteDetails.client';
 
 interface Props {
@@ -12,7 +12,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
 
   try {
-    const note = await fetchNoteById(id);
+    const note = await serverApi.fetchNoteById(id);
 
     const description = note.content && note.content.length > 150
       ? `${note.content.slice(0, 150)}...`
@@ -53,10 +53,10 @@ export default async function NoteDetailsPage({ params }: Props) {
 
   const queryClient = new QueryClient();
 
-  // Делаем prefetch конкретной заметки на сервере по полученному id
+  // Исправлено: Добавили serverApi. перед вызовом функции prefetch на сервере
   await queryClient.prefetchQuery({
     queryKey: ['note', id],
-    queryFn: () => fetchNoteById(id),
+    queryFn: () => serverApi.fetchNoteById(id),
   });
 
   return (

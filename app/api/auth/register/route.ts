@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { noteApi } from '../../../../lib/api/api';
 import { cookies } from 'next/headers';
 import { parseSetCookie } from 'cookie';
 import { isAxiosError } from 'axios';
-import { logErrorResponse } from '../../_utils/utils';
+
+// Исправлено: точные пути относительно папки register
+import { noteApi } from '../../api'; 
+import { logErrorResponse } from '../../_utils/utils'; 
 
 export async function POST(req: NextRequest) {
   try {
@@ -32,7 +34,7 @@ export async function POST(req: NextRequest) {
       logErrorResponse(error.response?.data);
       return NextResponse.json(
         { error: error.message, response: error.response?.data },
-        { status: error.status }
+        { status: error.status || 400 }
       );
     }
     logErrorResponse({ message: (error as Error).message });
