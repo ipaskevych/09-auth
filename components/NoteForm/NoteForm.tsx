@@ -16,8 +16,11 @@ export default function NoteForm() {
 
   const mutation = useMutation({
     // Исправлено: функция принимает объект заметки noteData и отправляет его в API
-    mutationFn: (noteData: { title: string; content: string; tag: string }) => 
-      clientApi.createNote(noteData),
+    mutationFn: (noteData: { title: string; content: string; tag: string }) =>
+  clientApi.createNote({
+    ...noteData,
+    tag: noteData.tag as any // Принудительно разрешаем передачу строки
+  }),
     onSuccess: () => {
       // Инвалидируем кэш заметок для TanStack Query
       queryClient.invalidateQueries({ queryKey: ['notes'] });

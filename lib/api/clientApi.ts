@@ -1,32 +1,34 @@
 import { api } from './api';
 import { User } from '@/types/user';
+import { Note, NewNote } from '@/types/note'; // Импортируем Note и ваш готовый NewNote
 import { LoginCredentials, RegisterCredentials } from '@/types/auth';
 
 export const clientApi = {
   // --- Заметки ---
-  async fetchNotes(params?: { search?: string; page?: number; tag?: string }) {
-    const { data } = await api.get('/notes', { params });
-    return data;
-  },
+  // Явно указываем, что функция возвращает массив заметок (Note[])
+  async fetchNotes(params?: { search?: string; page?: number; tag?: string }): Promise<any> {
+  const { data } = await api.get('/notes', { params });
+  return data;
+},
 
-  async fetchNoteById(id: string) {
+  async fetchNoteById(id: string): Promise<Note> {
     const { data } = await api.get(`/notes/${id}`);
     return data;
   },
 
-  async createNote(noteData: { title: string; content: string; tag: string }) {
+  // Используем ваш интерфейс NewNote вместо анонимного объекта или any
+  async createNote(noteData: NewNote): Promise<Note> {
     const { data } = await api.post('/notes', noteData);
     return data;
   },
 
-  async deleteNote(id: string) {
-    const { data } = await api.delete(`/notes/${id}`);
-    return data;
+  async deleteNote(id: string): Promise<void> {
+    await api.delete(`/notes/${id}`);
   },
 
   // --- Аутентификация ---
-  async register({ email, password }: any): Promise<User> {
-    const { data } = await api.post('/auth/register', { email, password });
+  async register(credentials: RegisterCredentials): Promise<User> {
+    const { data } = await api.post('/auth/register', credentials);
     return data;
   },
 

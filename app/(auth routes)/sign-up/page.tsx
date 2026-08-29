@@ -22,7 +22,7 @@ export default function SignUpPage() {
     const username = email.split('@')[0];
 
     try {
-      const user = await clientApi.register({ email, password });
+      const user = await clientApi.register({ username, email, password });
       setUser(user);
       router.push('/profile');
     } catch (err: any) {
