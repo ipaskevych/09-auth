@@ -7,6 +7,25 @@
     color: white;
 }
 
+/* Принудительно задаем логотипу и навигации одинаковую базовую ширину, */
+/* чтобы блок по центру стоял идеально ровно, а не смещался из-за длины текста */
+.logo,
+.header nav {
+    flex: 1;
+}
+
+/* Сдвигаем все элементы меню в правой части к правому краю */
+.header nav {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Новый класс для центрирования кнопки */
+.headerCenter {
+    flex: 0 0 auto;
+    text-align: center;
+}
+
 .header a {
     text-decoration: none;
     color: white;
@@ -24,6 +43,8 @@
     padding: 0;
     display: flex;
     gap: 1rem;
+    align-items: center;
+    /* Выравнивает текст ссылок по вертикали относительно кнопки */
 }
 
 .navigation li a {
@@ -38,23 +59,20 @@
 
 .createButton {
     display: inline-block;
-    padding: 0.5rem 1rem;
+    padding: 0.2rem 0.8rem;
     background-color: #0070f3;
-    /* Красивый синий цвет Next.js */
     color: white !important;
-    /* Перебиваем глобальный цвет ссылок, если нужно */
-    border-radius: 5px;
-    font-weight: 500;
+    border-radius: 10px;
+    font-size: 0.6rem;
+    font-weight: 200;
     transition: background-color 0.2s ease, transform 0.1s ease;
 }
 
 .createButton:hover {
     background-color: #0051a8;
-    /* Более темный синий при наведении */
     color: white !important;
 }
 
 .createButton:active {
     transform: scale(0.98);
-    /* Эффект нажатия */
 }
